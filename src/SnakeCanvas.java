@@ -11,9 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- *  A SnakeCanvas object represents a grid containing rows
- *  and columns of colored rectangles. Methods are provided
- * for getting and setting the colors of the rectangles.
+ * A SnakeCanvas object represents a grid containing rows
+ * and columns of colored rectangles. Methods are provided
+ * for getting and setting the colors of the rectangles. This
+ * object does all the drawing for the program.
  */
 public class SnakeCanvas extends Canvas {
 
@@ -21,23 +22,23 @@ public class SnakeCanvas extends Canvas {
     //------------------ private instance variables --------------------
 
 
-    private int rows, columns;       // The number of rows and columns of rectangles in the grid.
+    private final int rows, columns; // The number of rows and columns of rectangles in the grid.
 
-    private int[][] grid; // An array that contains the status of the game grid. If
-                          //    the snake occupies a space in the grid, the value is
-                          //    set to 1. If an apple occupies the grid, the value
-                          //    is set to 2. Else, the value is set to 0.
+    private Data[][] grid; // An array that contains the status of the game grid. Each space in
+                           //    the grid is either associated with a SnakeData object, a FoodData
+                           //    object, or is null (ie. blank).
 
     private Color backgroundColor = Color.rgb(40, 40, 40); // The color of the background.
-    private Color snakeColor = Color.OLIVE; // The starting color of the snake.
-    private Color foodColor = Color.SIENNA; // The starting color of the food.
 
-    private int score; // The score of the game.
-    private boolean playing; // True if game is in progress, false otherwise.
+    private int score; // The score of the current game.
 
-    private SnakeData snake; // The snake on the board.
+    private boolean playing; // True if game is in progress, false otherwise. This
+                             //    is used by the SnakeApp class to determine if a
+                             //    game is in progress during key or mouse events.
 
-    private ArrayList<FoodData> foodList; // A list of all food items on the board.
+    private Snake snake; // The snake on the board.
+
+    private ArrayList<Data> foodList; // A list of all food items on the board.
 
     private GraphicsContext g; // The graphics context for drawing on this canvas.
 
@@ -90,9 +91,9 @@ public class SnakeCanvas extends Canvas {
         preferredBlockHeight = Math.max( preferredBlockHeight, 5);
         preferredBlockWidth = Math.max( preferredBlockWidth, 5);
         playing = true;
-        grid = new int[rows][columns];
-        snake = new SnakeData(rows, columns, snakeColor);
-        foodList = new ArrayList<FoodData>();
+        grid = new Data[rows][columns];
+        snake = new Snake(rows, columns);
+        foodList = new ArrayList<Data>();
         addFood();
         setWidth(preferredBlockWidth*columns);
         setHeight(preferredBlockHeight*rows);
@@ -106,7 +107,7 @@ public class SnakeCanvas extends Canvas {
     /**
      * Return the number of rows of rectangles in the grid.
      */
-    public int getRowCount() {
+    public int getRows() {
         return rows;
     }
 
@@ -114,15 +115,15 @@ public class SnakeCanvas extends Canvas {
     /**
      * Return the number of columns of rectangles in the grid.
      */
-    public int getColumnCount() {
+    public int getColumns() {
         return columns;
     }   
 
 
     /**
-     * Return the value of an element in the grid.
+     * Return a reference to an element in the grid.
      */
-    public int getGridValue(int row, int column) {
+    public Data getGridData(int row, int column) {
         return grid[row][column];
     }
 
@@ -130,8 +131,8 @@ public class SnakeCanvas extends Canvas {
     /**
      * Set the value of an element in the grid.
      */
-    public void setGridValue(int row, int column, int val) {
-        grid[row][column] = val;
+    public void setGridData(int row, int column, Data data) {
+        grid[row][column] = data;
     } 
 
     /**
@@ -144,8 +145,8 @@ public class SnakeCanvas extends Canvas {
     /**
      * Set the value of playing.
      */
-    public void setPlaying(boolean b) {
-        playing = b;
+    public void setPlaying(boolean bool) {
+        playing = bool;
     }
 
 
@@ -154,8 +155,7 @@ public class SnakeCanvas extends Canvas {
 
     /**
      * Update the grid according to the snake's newest location and any
-     * food on the board and redraw the board. This routine returns a boolean
-     * which represents if the game is ongoing or has ended.
+     * food on the board and redraw the board.
      */
     public void updateGrid() {
 
@@ -163,32 +163,33 @@ public class SnakeCanvas extends Canvas {
         snake.update();
 
         // Check to see if the snake hit itself (the snake hit itself if the
-        // first Coordinate in the snake is the same as any other Coordinate
-        // in the snake.
-        for (int i = 1 ; i < snake.getLocation().size() ; i++) {
-            if (snake.getLocation().get(i).equals(snake.getLocation().get(0))) {
+        // location of the first SnakeData point in the snake is the same as
+        // any other SnakeData point in the snake.
+        for (int i = 1 ; i < snake.getSnakeArray().size() ; i++) {
+            if (snake.getSnakeArray().get(i).sameLocation(snake.getSnakeArray().get(0))) {
                 playing = false;
                 return;
             }
         }
 
         // Check to see if the snake hit a wall
-        if (snake.getLocation().get(0).getY() < 0
-                || snake.getLocation().get(0).getY() >= rows
-                || snake.getLocation().get(0).getX() >= columns
-                || snake.getLocation().get(0).getX() < 0) { // going off the board, game over
+        if (snake.getSnakeArray().get(0).getY() < 0
+                || snake.getSnakeArray().get(0).getY() >= rows
+                || snake.getSnakeArray().get(0).getX() >= columns
+                || snake.getSnakeArray().get(0).getX() < 0) { // going off the board, game over
                     playing = false;
                     return;
         }
 
-        // Check to see if the snake hit a food item
+        // Check to see if the snake hit any food item in the foodList
         if (!foodList.isEmpty()) {
             for (int i = 0 ; i < foodList.size() ; i++) {
                 
-                if (foodList.get(i).getLocation().equals(snake.getLocation().get(0))) { // the snake ate the food
+                if (foodList.get(i).sameLocation(snake.getSnakeArray().get(0))) { // the snake ate the food
+                    if (foodList.get(i) instanceof FoodData myFood)
+                        score += myFood.getValue();
                     foodList.remove(foodList.get(i));
                     snake.eat();
-                    score += 10;
 
                     // to prevent game from getting stale, always endure there is
                     // at least one food on the board
@@ -202,20 +203,20 @@ public class SnakeCanvas extends Canvas {
         }
 
         // Reset the grid
-        for (int i = 0; i < grid[0].length; i++) {
-            Arrays.fill(grid[i], 0);
+        for (int i = 0; i < grid.length; i++) {
+            Arrays.fill(grid[i], null);
         }
 
         // Update grid with the food locations
         if (!foodList.isEmpty()) {
-            for (FoodData f : foodList) {
-                grid[f.getLocation().getY()][f.getLocation().getX()] = 2;
+            for (Data f : foodList) {
+                grid[f.getY()][f.getX()] = f;
             }
         }
 
         // Update the grid with the snake's new location
-        for (Coordinate c : snake.getLocation()) {
-            grid[c.getY()][c.getX()] = 1;
+        for (Data s : snake.getSnakeArray()) {
+            grid[s.getY()][s.getX()] = s;
         }
 
         drawBoard();
@@ -228,10 +229,10 @@ public class SnakeCanvas extends Canvas {
      */
     public void resetGrid() {
 
-        grid = new int[rows][columns];
-        snake = new SnakeData(rows, columns, snakeColor);
+        grid = new Data[rows][columns];
+        snake = new Snake(rows, columns);
         score = 0;
-        foodList = new ArrayList<FoodData>();
+        foodList = new ArrayList<Data>();
         addFood();
 
         playing = true;
@@ -266,37 +267,21 @@ public class SnakeCanvas extends Canvas {
 
     /**
      * Add a FoodData to the board, ensuring that the food is not placed
-     * on a location that the snake currently occupies.
+     * on a location that the snake currently occupies or on top of another
+     * FoodData element.
      */
     public void addFood() {
 
         FoodData newFood;
-        boolean inList;
+        boolean inFoodList, inSnake;
 
         do {
-            newFood = new FoodData((int)(Math.random()*rows), (int)(Math.random()*columns), foodColor);
-            inList = isInFoodList(newFood);
-        } while (inList);
+            newFood = new FoodData((int)(Math.random()*columns), (int)(Math.random()*rows));
+            inFoodList = newFood.isInList(foodList);
+            inSnake = newFood.isInList(snake.getSnakeArray());
+        } while (inFoodList || inSnake);
         
         foodList.add(newFood);
-    }
-
-    /**
-     * Checks to see if a FoodData with a set of Coordinates already
-     * exists in the food list.
-     */
-    public boolean isInFoodList(FoodData food) {
-        
-        boolean inList = false;
-
-        if (!foodList.isEmpty()) {
-            for (FoodData f : foodList) {
-                if (f.getLocation().equals(food.getLocation()))
-                    inList = true;
-            }
-        }
-
-        return inList;
     }
 
 
@@ -342,14 +327,13 @@ public class SnakeCanvas extends Canvas {
         int x = (int)Math.round(colWidth*col);
         int w = Math.max(1, (int)Math.round(colWidth*(col+1)) - x);
         
-        int space = grid[row][col];
+        Data elem = grid[row][col];
         Color c;
 
-        switch (space) {
-            case 2 -> c = foodColor;
-            case 1 -> c = snake.getColor();
-            default -> c = backgroundColor;
-        }
+        if (elem == null)
+            c = backgroundColor;
+        else
+            c = elem.getColor();
 
         g.setFill(c);
         g.fillRect(x,y,w,h);

@@ -1,43 +1,34 @@
 import javafx.scene.paint.Color;
 
 /**
- * A class representing a food object in a game of snake. The location
- * of the food is stored in a Coordinate object. Eating a food causes a
- * snake to grow in length by 1.
+ * A class representing a FoodData object in a game of snake. Food objects are
+ * a subclass of Data, distinguished only by their color.
  * 
  */
 
-public class FoodData {
+public class FoodData extends Data {
     
     //------------------ private instance variables --------------------
 
-    private Coordinate location; // The coordinate of the food.
-    private Color color; // The color of the food
+    private final int value;
 
     /**
      * Construct a FoodData object.
      */
-    public FoodData(int x, int y, Color color) {
-        location = new Coordinate(x, y);
-        this.color = color;
-    }
-
-    //--------- methods for getting and setting snake properties ----------
-
-
-    /**
-     * Return the Coordinate of the FoodData object.
-     */
-    public Coordinate getLocation() {
-        return location;
+    public FoodData(int x, int y) {
+        super(x, y, Color.SIENNA);
+        value = 10;
     }
 
 
-    /**
-     * Return the Color of the FoodData object.
+    //--------- methods for getting and setting FoodData properties ----------
+
+
+    /*
+     * Return the value of the FoodData.
      */
-    public Color getColor() {
-        return color;
+    public int getValue() {
+        return value;
     }
 
 

@@ -1,219 +1,133 @@
-import javafx.application.Application;
-import javafx.application.Platform;
-
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.layout.Pane;
-import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
-import javafx.stage.Stage;
-
-import java.util.List;
-
+import java.util.ArrayList;
 
 /**
- * The class SnakeApp makes available a window made up of a grid
- * of rectangles. Routines are provided for opening and closing the
- * window. The program will end when the window is closed, either
- * because the user click's the window's close box or because the
- * program calls Snake.close().
- *
- * Initially, the canvas is loaded as a black screen.
+ * A class representing a Snake object in a game of snake. The location of the
+ * snake is stored as an ArrayList of SnakaData objects. The snake has a direction
+ * (which can be changed by a keypress, handled by the event handler).
  */
 
-public class Snake extends Application {
+public class Snake {
 
-    private static Stage window; // The application running the snake window (if one is open).
-    private static SnakeCanvas canvas; // A component that actually manages and displays the rectangles.
 
-    enum Speed {
-        SLOW,
-        MEDIUM,
-        FAST
-      }
+    //------------------ private instance variables --------------------
 
-    //------------------ private instance variables: GAME SETTINGS --------------------
 
-    private static Speed SPEED = Speed.MEDIUM; // The speed of the snake.
-    private static int SIZE_W = 30, SIZE_H = 30; // The width and height of the game canvas.
+    private ArrayList<Data> snakeArray; // An arraylist containing the SnakeData objects
+                                             //    of the snake. The head of the snake is at
+                                             //    position 0, and the tail of the snake is the
+                                             //    final position in the list.
 
-    /** 
-     * Open the snake window with a 30-by-30 grid of squares, where each
-     * square is 15 pixel on a side. Has no effect if the window is already open.
+    private int dir; // The direction that the snake is moving. 0 = UP, 1 = RIGHT,
+                     //    2 = DOWN, 3 = LEFT.
+
+
+    /**
+     * Construct a Snake by automtically adding four Coordinates
+     * to the snakes location at the bottom of the board. The snake
+     * always begins moving in an UP direction.
+     * @param rows the number of rows in the grid
+     * @param columns the number of columns in the grid
      */
-    public static void open() {
-        open(30,30,16,16);
+    public Snake(int rows, int columns) {
+        dir = 0;
+        snakeArray = new ArrayList<Data>();
+        snakeArray.add(new SnakeData(columns/2, rows - 4));
+        snakeArray.add(new SnakeData(columns/2, rows - 3));
+        snakeArray.add(new SnakeData(columns/2, rows - 2));
+        snakeArray.add(new SnakeData(columns/2, rows - 1));
+    }
+
+
+    //--------- methods for getting and setting Snake properties ----------
+
+
+    /**
+     * Return the location of the snake as an ArrayList of SnakeDatas.
+     */
+    public ArrayList<Data> getSnakeArray() {
+        return snakeArray;
+    }
+
+
+    //------------------ other useful public methods ---------------------
+
+
+    /**
+     * Change the direction of the snake.
+     */
+    public void changeDir(int dir) {
+        this.dir = dir;
     }
 
 
     /**
-     * Opens the snake window containing a specified number of rows and
-     * a specified number of columns of square. Each square is 16 pixels
-     * on a side.  Has no effect if the window is already open.
+     * Update the snake's location according to the direction it is currently
+     * moving. This routine sets the x and y component of every SnakaData element
+     * in the snake's location to the next SnakeData's x and y components, and
+     * moved the first SnakeData element 1 square in the direction of movement. It
+     * does not check to see whether the move is valid (that is an obligation of
+     * the caller).
      */
-    public static void open(int rows, int columns) {
-        open(rows,columns,16,16);
-    }
+    public void update() {
 
-
-    /**
-     * Opens the "snake" window on the screen. If the snake window was
-     * already open, has no effect.
-     *
-     * Precondition: The parameters rows, cols, w, and h are positive integers, and
-     *              the snake window is not already open.
-     * Postcondition: A window is open on the screen that can display rows and
-     *              columns of colored rectangles. Each rectangle is w pixels
-     *              wide and h pixels high. The number of rows is given by
-     *              the first parameter and the number of columns by the
-     *              second. Initially, all rectangles are black.
-     * Note:  The rows are numbered from 0 to rows - 1, and the columns are 
-     * numbered from 0 to cols - 1.
-     */
-    public static void open(int rows, int columns, int blockWidth, int blockHeight) {
-        if ( window != null )
-            return;
-        new Thread( () -> launch(Snake.class, new String[] {""+rows,""+columns,""+blockWidth,""+blockHeight}) ).start();
-        do {
-            delay(100);
-        } while (window == null || canvas == null);
-    }
-
-
-    /**
-     * Close the snake window, if one is open, and ends the program.
-     * The program will also end if the user closes the window.
-     */
-    public static void close() {
-        if (window != null) {
-            Platform.runLater( () -> window.close() );
-        }
-    }
-
-
-    /**
-     * Tests whether the snake window is currently open.
-     * 
-     * Precondition: None.
-     * Postcondition: The return value is true if the window is open when this
-     *              function is called, and it is false if the window is
-     *              closed.
-     */
-    public static boolean isOpen() {
-        return (window != null);
-    }
-
-
-    /**
-     * Inserts a delay in the program (to regulate the speed at which the snake
-     * moves, for example). Note that there is already a short delay
-     * of about 1 millisecond between drawing operations. Calling this method
-     * will add to that delay.
-     *
-     * Precondition: milliseconds is a positive integer.
-     * Postcondition: The program has paused for at least the specified number
-     *              of milliseconds, where one second is equal to 1000
-     *              milliseconds.
-     */
-    public static void delay(int milliseconds) {
-        if (milliseconds > 0) {
-            try { Thread.sleep(milliseconds); }
-            catch (InterruptedException e) { }
-        }
-    }
-    
-    
-    public void start(Stage stage) {
-        window = stage;
-        List<String> params = getParameters().getUnnamed();
-        if (params.size() != 4)
-            canvas = new SnakeCanvas();
-        else
-            canvas = new SnakeCanvas(Integer.parseInt(params.get(0)),Integer.parseInt(params.get(1)),
-                    Integer.parseInt(params.get(2)),Integer.parseInt(params.get(3)));
-        canvas.forceRedraw();
-        Pane pane = new Pane(canvas);
-        StackPane root = new StackPane(pane);
-        root.setStyle("-fx-border-width: 2px; -fx-border-color: #333");
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.setOnCloseRequest( e -> { System.exit(0); } );
-        stage.setTitle("snake");
-        stage.setResizable(false);
-        stage.show();
-
-        scene.setOnKeyPressed( e -> {
-            
-            // if no game is in progress, restart a game
-            if (canvas.getPlaying() == false) {
-                canvas.resetGrid();
-            }
-
-            // change the direction of the snake on key press
-            if (e.getCode() == KeyCode.UP) {
-                canvas.moveSnake(0);
-            }
-            if (e.getCode() == KeyCode.RIGHT) {
-                canvas.moveSnake(1);
-            }
-            if (e.getCode() == KeyCode.DOWN) {
-                canvas.moveSnake(2);
-            }
-            if (e.getCode() == KeyCode.LEFT) {
-                canvas.moveSnake(3);
-            }
-        });
-
-        scene.setOnMousePressed( e -> {
-            // if no game is in progress, restart a game
-            if (canvas.getPlaying() == false) {
-                canvas.resetGrid();
-            }
-        });
-    }
-
-
-    /**
-     * The main program creates the window, fills it with the background color,
-     * initializes the snake, and then moves the snake around as long as the
-     * window is open. It also will randomly insert a FoodData at a random location
-     * on the canvas, that is not on top of a snake.
-     */
-    public static void main(String[] args) {
-
-        Snake.open(SIZE_W, SIZE_H, 16, 16);
-
-        while (true) {
-            if (Math.random() < 0.03) // 3% chance every time canvas refreshes to spawn a food
-                canvas.addFood();
-
-            canvas.updateGrid();
-            canvas.getPlaying();
-
-            switch (SPEED) {
-                case SLOW -> {
-                    Snake.delay(300);
-                }
-                case MEDIUM -> {
-                    Snake.delay(150);
-                }
-                case FAST -> {
-                    Snake.delay(75);
-                }
-            }
-
-            if (!canvas.getPlaying()) {
-                canvas.gameOver();
-                while (!canvas.getPlaying()) {
-                    try { // to avoid overwhelming the application thread ...
-                        Thread.sleep(1);
+        switch (dir) {
+            case 0 -> { // snake is moving up
+                for (int i = snakeArray.size() - 1 ; i >= 0 ; i--) {
+                    if (i == 0) { 
+                        snakeArray.get(i).setY(snakeArray.get(i).getY()-1);
                     }
-                    catch (InterruptedException e) {
+                    else {
+                        snakeArray.get(i).setX(snakeArray.get(i-1).getX());
+                        snakeArray.get(i).setY(snakeArray.get(i-1).getY());
+                    }
+                }
+            }
+            case 1 -> { // snake is moving right
+                for (int i = snakeArray.size() - 1 ; i >= 0 ; i--) {
+                    if (i == 0) { 
+                        snakeArray.get(i).setX(snakeArray.get(i).getX()+1);
+                    }
+                    else {
+                        snakeArray.get(i).setX(snakeArray.get(i-1).getX());
+                        snakeArray.get(i).setY(snakeArray.get(i-1).getY());
+                    }
+                }
+            }
+            case 2 -> { // snake is moving down
+                for (int i = snakeArray.size() - 1 ; i >= 0 ; i--) {
+                    if (i == 0) { 
+                        snakeArray.get(i).setY(snakeArray.get(i).getY()+1);
+                    }
+                    else {
+                        snakeArray.get(i).setX(snakeArray.get(i-1).getX());
+                        snakeArray.get(i).setY(snakeArray.get(i-1).getY());
+                    }
+                }
+            }
+            default -> { // snake is moving left
+                for (int i = snakeArray.size() - 1 ; i >= 0 ; i--) {
+                    if (i == 0) {
+                        snakeArray.get(i).setX(snakeArray.get(i).getX()-1);
+                    }
+                    else {
+                        snakeArray.get(i).setX(snakeArray.get(i-1).getX());
+                        snakeArray.get(i).setY(snakeArray.get(i-1).getY());
                     }
                 }
             }
         }
-    }  // end main
+    }
 
-}  // end of class Snake
+
+    /**
+     * When the snake eats a food, a new SnakeData is added to the snake's location.
+     * It is added to the same location as the last piece of the snake. This is OK,
+     * because it will be updated to the correct location when the snake moves.
+     */
+    public void eat() {
+        Data last = snakeArray.get(snakeArray.size() - 1); // find the last SnakeData in the snake
+        snakeArray.add(new SnakeData(last.getX(), last.getY()));
+    }
+
+
+} // end of class Snake
