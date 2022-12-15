@@ -4,7 +4,7 @@ A simple snake game written in java, using javaFX to display the game.
 
 ## screenshot
 
-![snake](https://imgur.com/DIJfUNr)
+![snake](https://i.imgur.com/DIJfUNr.png)
 
 ## how to support me
 
