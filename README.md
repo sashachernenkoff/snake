@@ -13,6 +13,7 @@ a simple snake game written in java, using javaFX to display the game. i made th
 ## requirements
 
 java se 17+
+
 javafx sdk 17+
 
 ## how to run the game
