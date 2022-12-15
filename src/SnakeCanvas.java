@@ -38,7 +38,7 @@ public class SnakeCanvas extends Canvas {
 
     private Snake snake; // The snake on the board.
 
-    private ArrayList<Data> foodList; // A list of all food items on the board.
+    private ArrayList<FoodData> foodList; // A list of all food items on the board.
 
     private GraphicsContext g; // The graphics context for drawing on this canvas.
 
@@ -93,7 +93,7 @@ public class SnakeCanvas extends Canvas {
         playing = true;
         grid = new Data[rows][columns];
         snake = new Snake(rows, columns);
-        foodList = new ArrayList<Data>();
+        foodList = new ArrayList<FoodData>();
         addFood();
         setWidth(preferredBlockWidth*columns);
         setHeight(preferredBlockHeight*rows);
@@ -232,7 +232,7 @@ public class SnakeCanvas extends Canvas {
         grid = new Data[rows][columns];
         snake = new Snake(rows, columns);
         score = 0;
-        foodList = new ArrayList<Data>();
+        foodList = new ArrayList<FoodData>();
         addFood();
 
         playing = true;
@@ -273,12 +273,16 @@ public class SnakeCanvas extends Canvas {
     public void addFood() {
 
         FoodData newFood;
-        boolean inFoodList, inSnake;
+        boolean inFoodList = false, inSnake = false;
 
         do {
             newFood = new FoodData((int)(Math.random()*columns), (int)(Math.random()*rows));
-            inFoodList = newFood.isInList(foodList);
-            inSnake = newFood.isInList(snake.getSnakeArray());
+            for (FoodData f : foodList)
+                if (f.sameLocation(newFood))
+                    inFoodList = true;
+            for (SnakeData s : snake.getSnakeArray())
+                if (s.sameLocation(newFood))
+                    inSnake = true;
         } while (inFoodList || inSnake);
         
         foodList.add(newFood);

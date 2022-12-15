@@ -12,7 +12,7 @@ public class Snake {
     //------------------ private instance variables --------------------
 
 
-    private ArrayList<Data> snakeArray; // An arraylist containing the SnakeData objects
+    private ArrayList<SnakeData> snakeArray; // An arraylist containing the SnakeData objects
                                              //    of the snake. The head of the snake is at
                                              //    position 0, and the tail of the snake is the
                                              //    final position in the list.
@@ -30,7 +30,7 @@ public class Snake {
      */
     public Snake(int rows, int columns) {
         dir = 0;
-        snakeArray = new ArrayList<Data>();
+        snakeArray = new ArrayList<SnakeData>();
         snakeArray.add(new SnakeData(columns/2, rows - 4));
         snakeArray.add(new SnakeData(columns/2, rows - 3));
         snakeArray.add(new SnakeData(columns/2, rows - 2));
@@ -44,7 +44,7 @@ public class Snake {
     /**
      * Return the location of the snake as an ArrayList of SnakeDatas.
      */
-    public ArrayList<Data> getSnakeArray() {
+    public ArrayList<SnakeData> getSnakeArray() {
         return snakeArray;
     }
 

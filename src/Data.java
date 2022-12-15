@@ -38,8 +38,8 @@ public abstract class Data {
     }
 
 
-        /**
-     * Checks to see if a FoodData object already exists in an ArrayList
+    /**
+     * Checks to see if a Data object already exists in an ArrayList
      * (by comparing the sets of coordinates in both objects).
      */
     public boolean isInList(ArrayList<Data> list) {
