@@ -1,6 +1,6 @@
 ## snake
 
-A simple snake game written in java, using javaFX to display the game.
+A simple snake game written in java, using javaFX to display the game. I made this while learning java through David J. Eck's book 'Introduction to Programming Using Java'.
 
 ## screenshot
 
